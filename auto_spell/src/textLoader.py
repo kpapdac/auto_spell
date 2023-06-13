@@ -45,14 +45,16 @@ class prepareTextLabelLoader:
         pass
 
 class prepareTextLabelLoaderLogisticNN(prepareTextLabelLoader):
-    def __init__(self, data, text_name: str, label_name: str):
+    def __init__(self, data, text_name: str, label_name: str, text_pipeline, label_pipeline):
         super().__init__(data, text_name, label_name)
+        self.text_pipeline = text_pipeline
+        self.label_pipeline = label_pipeline
 
     def collate(self, batch):
         label_list, text_list, offsets = [], [], [0]
         for (_label, _text) in batch:
-            label_list.append(label_pipeline(_label))
-            processed_text = torch.tensor(text_pipeline(_text), dtype=torch.int64)
+            label_list.append(self.label_pipeline(_label))
+            processed_text = torch.tensor(self.text_pipeline(_text), dtype=torch.int64)
             text_list.append(processed_text)
             offsets.append(processed_text.size(0))
         label_list = torch.tensor(label_list, dtype=torch.int64)
