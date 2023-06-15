@@ -63,17 +63,19 @@ class prepareTextLabelLoaderLogisticNN(prepareTextLabelLoader):
         return label_list.to(device), text_list.to(device), offsets.to(device)
 
 class prepareTextLabelLoaderRNN(prepareTextLabelLoader):
-    def __init__(self, data, text_name: str, label_name: str, pad_idx: int):
+    def __init__(self, data, text_name: str, label_name: str, pad_idx: int, text_pipeline, label_pipeline):
         super().__init__(data, text_name, label_name)
         self.pad_idx = pad_idx
+        self.text_pipeline = text_pipeline
+        self.label_pipeline = label_pipeline
 
     def collate(self, batch):
         label_list, text_list = [], []
         for (_label, _text) in batch:
-            label_list.append(label_pipeline(_label))
-            processed_text = torch.tensor(text_pipeline(_text), dtype=torch.int64)
+            label_list.append(self.label_pipeline(_label))
+            processed_text = torch.tensor(self.text_pipeline(_text), dtype=torch.int64)
             text_list.append(processed_text)
         label_list = torch.tensor(label_list, dtype=torch.int64)
         labels = label_list
         text = nn.utils.rnn.pad_sequence(text_list, padding_value=self.pad_idx, batch_first=True)
-        return text, labels
+        return labels, text
