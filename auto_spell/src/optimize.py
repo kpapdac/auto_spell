@@ -10,7 +10,7 @@ class optimize:
         self.optimizer = optimizer
         self.padding = padding
 
-    def train(self):
+    def train(self, epoch):
         self.model.train()
         total_acc, total_count = 0, 0
         log_interval = 500
@@ -19,18 +19,18 @@ class optimize:
         if self.padding:
             for idx, (label, text) in enumerate(self.train_dataloader):
                 self.optimizer.zero_grad()
-                print(f'text size is: {text.size(1)}')
-                print(f'label is: {label}')
+#                 print(f'text size is: {text.size(1)}')
+#                 print(f'label is: {label}')
                 predicted_label = self.model(text)
                 loss = self.criterion(predicted_label, label)
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), 0.1)
                 self.optimizer.step()
-                for name, param in self.model.named_parameters():
-                    print(name, param.mean())
+#                 for name, param in self.model.named_parameters():
+#                     print(name, param.mean())
                 total_acc += (predicted_label.argmax(1) == label).sum().item()
                 total_count += label.size(0)
-                print(total_acc)
+#                 print(total_acc)
                 running_loss =+ loss.item() * text.size(0)
                 if idx % log_interval == 0 and idx > 0:
                     elapsed = time.time() - start_time
@@ -47,11 +47,11 @@ class optimize:
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), 0.1)
                 self.optimizer.step()
-                for name, param in self.model.named_parameters():
-                    print(name, param.mean())
+#                 for name, param in self.model.named_parameters():
+#                     print(name, param.mean())
                 total_acc += (predicted_label.argmax(1) == label).sum().item()
                 total_count += label.size(0)
-                print(total_acc)
+#                 print(total_acc)
                 running_loss =+ loss.item() * text.size(0)
                 if idx % log_interval == 0 and idx > 0:
                     elapsed = time.time() - start_time
@@ -86,12 +86,12 @@ class optimize:
         loss_values = []
         for epoch in range(1, epochs + 1):
             epoch_start_time = time.time()
-            new_loss = self.train()
+            new_loss = self.train(epoch)
             loss_values.append(new_loss)
             print(f'Loss is: {new_loss}')
             accu_val = self.evaluate()
             if total_accu is not None and total_accu > accu_val:
-                scheduler.step()
+                self.optimizer.step()
             else:
                 total_accu = accu_val
             print('-' * 59)
@@ -102,11 +102,11 @@ class optimize:
             print('-' * 59)
 
     def predict(self, text, textpipeline):
-        print(text)
+#         print(text)
         with torch.no_grad():
             if self.padding:
-                text = torch.tensor(textpipeline(text))
-                print(f'text is: {text}')
+                text = torch.tensor([textpipeline(text)])
+#                 print(f'text is: {text}')
                 output = self.model(text)
             else:
                 text = torch.tensor(textpipeline(text))

@@ -29,7 +29,7 @@ class test_optimize(unittest.TestCase):
         prep = textLoader.prepareTextLabelLoaderLogisticNN(self.text_label, 'sms', 'label', self.voc.text_pipeline, self.voc.label_pipeline)
         self.train_dataloader = DataLoader(self.text_label, batch_size=8, shuffle=False, collate_fn=prep.collate)
         opt = optimize.optimize(self.train_dataloader, self.train_dataloader, self.model, self.criterion, self.optimizer, False)        
-        opt.train()
+        opt.train(epoch=1)
         opt.evaluate()
 
     def test_hypertune(self):
@@ -51,7 +51,7 @@ class test_optimize(unittest.TestCase):
         prep = textLoader.prepareTextLabelLoaderRNN(self.text_label, 'sms', 'label', self.voc.vocab[pad_token], self.voc.text_pipeline, self.voc.label_pipeline)
         self.train_dataloader = DataLoader(self.text_label, batch_size=8, shuffle=False, collate_fn=prep.collate)
         opt = optimize.optimize(self.train_dataloader, self.train_dataloader, self.model_rnn, self.criterion, self.optimizer, True)        
-        opt.train()
+        opt.train(epoch=1)
         opt.evaluate()
 
     def test_hypertune_rnn(self):

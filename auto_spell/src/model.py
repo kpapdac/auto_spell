@@ -1,9 +1,10 @@
 from torch import nn
 import torch
+import torch.nn.functional as F
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class TextClassificationModel(nn.Module):
-
+    
     def __init__(self, vocab_size, embed_dim, num_class):
         super(TextClassificationModel, self).__init__()
         self.embedding = nn.EmbeddingBag(vocab_size, embed_dim, sparse=False)
@@ -11,11 +12,37 @@ class TextClassificationModel(nn.Module):
         self.init_weights()
 
     def init_weights(self):
-        initrange = 0.5
+        initrange = 0.1
         self.embedding.weight.data.uniform_(-initrange, initrange)
         self.fc.weight.data.uniform_(-initrange, initrange)
         self.fc.bias.data.zero_()
 
+    def forward(self, text, offsets):
+        embedded = self.embedding(text, offsets)
+        return F.log_softmax(self.fc(embedded), dim=1)
+
+class TextClassificationModel2D(nn.Module):
+
+    def __init__(self, vocab_size, embed_dim, H, num_class):
+        super(TextClassificationModel2D, self).__init__()
+        self.embedding = nn.EmbeddingBag(vocab_size, embed_dim, sparse=False)
+        self.fc = nn.Sequential(
+            nn.Linear(embed_dim, H),
+            nn.ReLU(),
+            nn.Linear(H, H),
+            nn.ReLU(),
+            nn.Linear(H, num_class)
+        )
+        self.init_weights()
+        
+    def init_weights(self):
+        initrange = 5
+        self.embedding.weight.data.uniform_(-initrange, initrange)
+        for m in self.fc:
+            if isinstance(m, nn.Linear):
+                m.weight.data.uniform_(-initrange, initrange)
+                m.bias.data.zero_()
+            
     def forward(self, text, offsets):
         embedded = self.embedding(text, offsets)
         return self.fc(embedded)
